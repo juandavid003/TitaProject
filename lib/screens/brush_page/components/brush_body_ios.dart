@@ -623,28 +623,46 @@ void showChildrenSelectionDialog() async {
     }
   }
 
+
   void _finishBrush(BuildContext context) async {
-    await childrenService.addBrushing(_childrensSelected);
+  final selectedChild = _childrensSelected.first;
 
-    List<PersonModel> childrensSelectedAvailableCount =
-        await childrenService.childrenBrushingAvailable(_childrensSelected);
+  await childrenService.addBrushing([selectedChild]);
 
-    if (childrensSelectedAvailableCount.isNotEmpty) {
-      await childrenService.addBBbCashBulk(
-          childrensSelectedAvailableCount, "tita_brush");
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(Utils.translate('add_bbcash'))),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(Utils.translate('limited_bbcash_day'))),
-      );
-    }
+  Navigator.pushNamed(
+    context,
+    '/beforeCleaning_page',
+    arguments: {
+      'fromBrushing': true,
+      'child': selectedChild,
+    },
+  );
+}
 
-    _childrensSelected = [];
 
-    Navigator.pushNamed(context, '/stats_page').then((value) {
-      Navigator.pop(context);
-    });
-  }
+
+  // void _finishBrush(BuildContext context) async {
+  //   await childrenService.addBrushing(_childrensSelected);
+
+  //   List<PersonModel> childrensSelectedAvailableCount =
+  //       await childrenService.childrenBrushingAvailable(_childrensSelected);
+
+  //   if (childrensSelectedAvailableCount.isNotEmpty) {
+  //     await childrenService.addBBbCashBulk(
+  //         childrensSelectedAvailableCount, "tita_brush");
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       SnackBar(content: Text(Utils.translate('add_bbcash'))),
+  //     );
+  //   } else {
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       SnackBar(content: Text(Utils.translate('limited_bbcash_day'))),
+  //     );
+  //   }
+
+  //   _childrensSelected = [];
+
+  //   Navigator.pushNamed(context, '/stats_page').then((value) {
+  //     Navigator.pop(context);
+  //   });
+  // }
 }
