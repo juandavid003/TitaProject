@@ -1,0 +1,139 @@
+name: odontobb
+description: "Odontopediatría desde casa."
+# The following line prevents the package from being accidentally published to
+# pub.dev using `flutter pub publish`. This is preferred for private packages.
+publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+
+# The following defines the version and build number for your application.
+# A version number is three numbers separated by dots, like 1.2.43
+# followed by an optional build number separated by a +.
+# Both the version and the builder number may be overridden in flutter
+# build by specifying --build-name and --build-number, respectively.
+# In Android, build-name is used as versionName while build-number used as versionCode.
+# Read more about Android versioning at https://developer.android.com/studio/publish/versioning
+# In iOS, build-name is used as CFBundleShortVersionString while build-number is used as CFBundleVersion.
+# Read more about iOS versioning at
+# https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
+# In Windows, build-name is used as the major, minor, and patch parts
+# of the product and file versions while build-number is used as the build suffix.
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.6.1
+
+# Dependencies specify other packages that your package needs in order to work.
+# To automatically upgrade your package dependencies to the latest versions
+# consider running `flutter pub upgrade --major-versions`. Alternatively,
+# dependencies can be manually updated by changing the version numbers below to
+# the latest version available on pub.dev. To see which dependencies have newer
+# versions available, run `flutter pub outdated`.
+dependencies:
+  auto_size_text: ^3.0.0
+  cached_network_image: ^3.4.1
+  camera: ^0.10.0
+  card_swiper: ^3.0.1
+  carousel_slider: ^5.0.0
+  circular_countdown_timer: ^0.2.4
+  cloud_firestore: ^5.6.2
+  cupertino_icons: ^1.0.8
+  date_picker_plus: ^4.1.0
+  firebase_app_check: ^0.3.2+1
+  firebase_auth: ^5.4.1
+  firebase_core: ^3.12.1
+  firebase_messaging: ^15.2.5
+  firebase_storage: ^12.4.1
+  flutter:
+    sdk: flutter
+  flutter_linkify: ^6.0.0
+  flutter_localizations:
+    sdk: flutter
+  flutter_secure_storage: ^9.2.4
+  flutter_slidable: ^4.0.0
+  flutter_svg: ^2.0.17
+  flutter_switch: ^0.3.2
+  flutter_tts: ^3.7.0
+  hive: ^2.2.3
+  http: ^1.3.0
+  image: ^4.2.0
+  image_picker: ^1.1.2
+  intl: ^0.19.0
+  jiffy: ^6.3.2
+  mobile_scanner: ^6.0.7
+  package_info_plus: ^8.1.3
+  path_provider: ^2.1.5
+  provider: ^6.1.2
+  qr_flutter: ^4.1.0
+  shared_preferences: ^2.0.15
+  shimmer: ^3.0.0
+  styled_text: ^8.1.0
+  syncfusion_flutter_charts: ^28.1.41
+  transparent_image: ^2.0.1
+  url_launcher: ^6.3.1
+  uuid: ^4.5.1
+  video_player: ^2.9.2
+  webview_flutter: ^4.11.0
+  youtube_player_iframe: ^5.2.1
+  overlay_support: ^2.1.0
+  flutter_local_notifications: ^19.0.0
+  arkit_plugin: ^1.1.2
+  just_audio: ^0.9.46
+  fl_chart: ^0.64.0
+  flutter_charts: ^0.5.2
+  arcore_flutter_plugin: ^0.1.0
+  # flutter_inappwebview: ^6.0.0
+  # flutter_unity_widget: ^2022.2.1
+  # ar_flutter_plugin: ^0.7.3
+  # vector_math: ^2.1.0
+  # model_viewer_plus: ^1.6.1
+
+
+
+dev_dependencies:
+  flutter_launcher_icons: ^0.14.3
+
+  # The "flutter_lints" package below contains a set of recommended lints to
+  # encourage good coding practices. The lint set provided by the package is
+  # activated in the `analysis_options.yaml` file located at the root of your
+  # package. See that file for information about deactivating specific lint
+  # rules and activating additional ones.
+  flutter_lints: ^5.0.0
+  flutter_test:
+    sdk: flutter
+
+flutter_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/icons/odontobb-icon.png"
+  adaptive_icon_background: "assets/icons/odontobb-icon.png"
+# For information on the generic Dart part of this file, see the
+# following page: https://dart.dev/tools/pub/pubspec
+# The following section is specific to Flutter packages.
+flutter:
+
+  # The following line ensures that the Material Icons font is
+  # included with your application, so that you can use the icons in
+  # the material Icons class.
+  uses-material-design: true
+  assets:
+    - assets/icons/
+    - assets/images/
+    - assets/lang/
+    - assets/data/
+    - assets/audio/
+    - assets/
+
+  fonts:
+    - family: Popins
+      fonts:
+        - asset: assets/fonts/Poppins-ExtraLight.ttf
+          weight: 200
+        - asset: assets/fonts/Poppins-Light.ttf
+          weight: 300
+        - asset: assets/fonts/Poppins-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Poppins-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Poppins-Bold.ttf
+          weight: 600
+        - asset: assets/fonts/Poppins-ExtraBold.ttf
+          weight: 700

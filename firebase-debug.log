@@ -1,0 +1,33 @@
+[debug] [2025-01-28T23:27:54.768Z] ----------------------------------------------------------------------
+[debug] [2025-01-28T23:27:54.769Z] Command:       /usr/local/bin/firebase /Users/mvcruzata/.cache/firebase/tools/lib/node_modules/firebase-tools/lib/bin/firebase projects:list --json
+[debug] [2025-01-28T23:27:54.769Z] CLI Version:   9.9.0
+[debug] [2025-01-28T23:27:54.769Z] Platform:      darwin
+[debug] [2025-01-28T23:27:54.769Z] Node Version:  v12.18.1
+[debug] [2025-01-28T23:27:54.770Z] Time:          Tue Jan 28 2025 18:27:54 GMT-0500 (Ecuador Time)
+[debug] [2025-01-28T23:27:54.770Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2025-01-28T23:27:54.772Z] >>> [apiv2][query] GET https://firebase-public.firebaseio.com/cli.json [none]
+[debug] [2025-01-28T23:27:54.781Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-01-28T23:27:54.781Z] > authorizing via signed-in user (mvcruzata@gmail.com)
+[debug] [2025-01-28T23:27:54.785Z] > refreshing access token with scopes: []
+[debug] [2025-01-28T23:27:54.786Z] >>> HTTP REQUEST POST https://www.googleapis.com/oauth2/v3/token  
+ <request body omitted>
+[debug] [2025-01-28T23:27:55.291Z] <<< [apiv2][status] GET https://firebase-public.firebaseio.com/cli.json 200
+[debug] [2025-01-28T23:27:55.291Z] <<< [apiv2][body] GET https://firebase-public.firebaseio.com/cli.json {"cloudBuildErrorAfter":1594252800000,"cloudBuildWarnAfter":1590019200000,"defaultNode10After":1594252800000,"minVersion":"3.0.5","node8DeploysDisabledAfter":1613390400000,"node8RuntimeDisabledAfter":1615809600000,"node8WarnAfter":1600128000000}
+[debug] [2025-01-28T23:29:09.991Z] Authentication Error: Your credentials are no longer valid. Please run firebase login --reauth
+
+For CI servers and headless environments, generate a new token with firebase login:ci
+[debug] [2025-01-28T23:29:10.420Z] Error: write EPIPE
+    at afterWriteDispatched (internal/stream_base_commons.js:154:25)
+    at writeGeneric (internal/stream_base_commons.js:145:3)
+    at Socket._writeGeneric (net.js:786:11)
+    at Socket._write (net.js:798:8)
+    at doWrite (_stream_writable.js:403:12)
+    at writeOrBuffer (_stream_writable.js:387:5)
+    at Socket.Writable.write (_stream_writable.js:318:11)
+    at Ora.stopAndPersist (/Users/mvcruzata/.cache/firebase/tools/lib/node_modules/ora/index.js:214:15)
+    at Ora.fail (/Users/mvcruzata/.cache/firebase/tools/lib/node_modules/ora/index.js:196:15)
+    at Command.actionFn (/Users/mvcruzata/.cache/firebase/tools/lib/node_modules/firebase-tools/lib/commands/projects-list.js:53:17)
+    at processTicksAndRejections (internal/process/task_queues.js:97:5)
+[error] 
+[error] Error: An unexpected error has occurred.

@@ -1,0 +1,28 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "odontobb",
+            "request": "launch",
+            "type": "dart",
+            "stopOnException": ["Unhandled"],  // Solo se detiene en excepciones no manejadas
+            "args": ["run", "--no-enable-impeller"]
+        },
+        {
+            "name": "odontobb (profile mode)",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "profile",
+            "stopOnException": ["Unhandled"],  // Solo se detiene en excepciones no manejadas
+            "args": ["run", "--no-enable-impeller"]
+        },
+        {
+            "name": "odontobb (release mode)",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "release",
+            "stopOnException": ["Unhandled"],  // Solo se detiene en excepciones no manejadas
+            "args": ["run", "--no-enable-impeller"]
+        }
+    ]
+}
