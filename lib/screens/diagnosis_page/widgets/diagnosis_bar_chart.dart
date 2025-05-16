@@ -17,111 +17,142 @@ class DiagnosisLineChart extends StatelessWidget {
     'Ulcera': Colors.deepPurple,
   };
 
-  @override
-@override
-Widget build(BuildContext context) {
-  final Map<String, List<FlSpot>> seriesMap = {
-    for (var key in classColors.keys) key: [],
-  };
-
-  final sortedList = diagnosisList
-      .where((d) => d.predictions != null)
-      .toList()
-    ..sort((a, b) => a.predictionDate!.compareTo(b.predictionDate!));
-
-  for (int i = 0; i < sortedList.length; i++) {
-    final diagnosis = sortedList[i];
-    final Map<String, double> confidenceMap = {
-      for (var className in classColors.keys) className: 0.0
+  // Función para convertir fechas como "14 mayo 2025 13:31:38"
+  DateTime parseSpanishDate(String input) {
+    final months = {
+      'enero': '01',
+      'febrero': '02',
+      'marzo': '03',
+      'abril': '04',
+      'mayo': '05',
+      'junio': '06',
+      'julio': '07',
+      'agosto': '08',
+      'septiembre': '09',
+      'octubre': '10',
+      'noviembre': '11',
+      'diciembre': '12',
     };
 
-    for (var pred in diagnosis.predictions!) {
-      String className = pred['class_name'];
-      double confidence = (pred['confidence'] as num).toDouble();
+    final parts = input.split(' ');
+    if (parts.length < 4) return DateTime.now(); // fallback por seguridad
 
-      // Guardar el mayor valor para cada clase (si hay varios)
-      if (confidenceMap[className] != null) {
-        confidenceMap[className] =
-            confidence > confidenceMap[className]! ? confidence : confidenceMap[className]!;
-      }
-    }
+    final day = parts[0];
+    final month = months[parts[1].toLowerCase()] ?? '01';
+    final year = parts[2];
+    final time = parts[3];
 
-    // Añadir un punto para cada clase (aunque sea 0)
-    confidenceMap.forEach((className, confidence) {
-      seriesMap[className]!.add(FlSpot(i.toDouble(), confidence));
-    });
+    final formatted = "$day/$month/$year $time";
+    return DateFormat("d/MM/yyyy HH:mm:ss").parse(formatted);
   }
 
-  final lines = seriesMap.entries.map((entry) {
-    return LineChartBarData(
-      spots: entry.value,
-      isCurved: false,
-      dotData: FlDotData(show: true),
-      belowBarData: BarAreaData(show: false),
-      color: classColors[entry.key] ?? Colors.grey,
-      barWidth: 3,
-    );
-  }).toList();
+  @override
+  Widget build(BuildContext context) {
+    final Map<String, List<FlSpot>> seriesMap = {
+      for (var key in classColors.keys) key: [],
+    };
 
-return Column(
-  crossAxisAlignment: CrossAxisAlignment.start,
-  children: [
-    SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: SizedBox(
-        width: sortedList.length * 45, // ← puedes ajustar esto para más o menos espacio
-        height: 275,
-        child: LineChart(
-          LineChartData(
-            lineBarsData: lines,
-           titlesData: FlTitlesData(
-  bottomTitles: AxisTitles(
-    sideTitles: SideTitles(
-      showTitles: true,
-      getTitlesWidget: (value, meta) {
-        int index = value.toInt();
-        if (index >= 0 && index < sortedList.length) {
-          final date = DateFormat("d MMMM y H:mm:ss", 'es').parse(sortedList[index].predictionDate ?? '');
-          return SideTitleWidget(
-            axisSide: meta.axisSide,
-            child: Text(
-              DateFormat.Md().format(date ?? DateTime.now()),
-              style: const TextStyle(fontSize: 10, color: Colors.black), // ← color negro
-            ),
-          );
+    final sortedList = diagnosisList
+        .where((d) => d.predictions != null)
+        .toList()
+      ..sort((a, b) => parseSpanishDate(a.predictionDate ?? '')
+          .compareTo(parseSpanishDate(b.predictionDate ?? '')));
+
+    for (int i = 0; i < sortedList.length; i++) {
+      final diagnosis = sortedList[i];
+      final Map<String, double> confidenceMap = {
+        for (var className in classColors.keys) className: 0.0
+      };
+
+      for (var pred in diagnosis.predictions!) {
+        String className = pred['class_name'];
+        double confidence = (pred['confidence'] as num).toDouble();
+
+        if (confidenceMap[className] != null) {
+          confidenceMap[className] = confidence > confidenceMap[className]!
+              ? confidence
+              : confidenceMap[className]!;
         }
-        return const Text('');
-      },
-    ),
-  ),
-  leftTitles: AxisTitles(
-    sideTitles: SideTitles(
-      showTitles: true,
-      getTitlesWidget: (value, meta) {
-        return SideTitleWidget(
-          axisSide: meta.axisSide,
-          child: Text(
-          value.toInt().toString(),
-            style: const TextStyle(fontSize: 10, color: Colors.black), // ← color negro
-          ),
-        );
-      },
-    ),
-  ),
-),
-borderData: FlBorderData(show: true),
-            gridData: FlGridData(show: true),
+      }
+
+      confidenceMap.forEach((className, confidence) {
+        seriesMap[className]!.add(FlSpot(i.toDouble(), confidence));
+      });
+    }
+
+    final lines = seriesMap.entries.map((entry) {
+      return LineChartBarData(
+        spots: entry.value,
+        isCurved: false,
+        dotData: FlDotData(show: true),
+        belowBarData: BarAreaData(show: false),
+        color: classColors[entry.key] ?? Colors.grey,
+        barWidth: 3,
+      );
+    }).toList();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: SizedBox(
+            width: sortedList.length * 45,
+            height: 275,
+            child: LineChart(
+              LineChartData(
+                lineBarsData: lines,
+                titlesData: FlTitlesData(
+                  bottomTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      getTitlesWidget: (value, meta) {
+                        int index = value.toInt();
+                        if (index >= 0 && index < sortedList.length) {
+                          final date = parseSpanishDate(
+                              sortedList[index].predictionDate ?? '');
+                          return SideTitleWidget(
+                            axisSide: meta.axisSide,
+                            child: Text(
+                              DateFormat("MM/dd").format(date),
+                              style: const TextStyle(
+                                  fontSize: 10, color: Colors.black),
+                            ),
+                          );
+                        }
+                        return const Text('');
+                      },
+                    ),
+                  ),
+                  leftTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      getTitlesWidget: (value, meta) {
+                        return SideTitleWidget(
+                          axisSide: meta.axisSide,
+                          child: Text(
+                            value.toInt().toString(),
+                            style: const TextStyle(
+                                fontSize: 10, color: Colors.black),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+                borderData: FlBorderData(show: true),
+                gridData: FlGridData(show: true),
+              ),
+            ),
           ),
         ),
-      ),
-    ),
-    const SizedBox(height: 5),
-    buildLegend(classColors),
-  ],
-);
-}
+        const SizedBox(height: 5),
+        buildLegend(classColors),
+      ],
+    );
+  }
 
-   Widget buildLegend(Map<String, Color> colors) {
+  Widget buildLegend(Map<String, Color> colors) {
     return Wrap(
       spacing: 16,
       runSpacing: 8,
@@ -142,7 +173,7 @@ borderData: FlBorderData(show: true),
               entry.key,
               style: TextStyle(
                 fontSize: 12,
-                color: Colors.black, // <- Texto en negro
+                color: Colors.black,
               ),
             ),
           ],
