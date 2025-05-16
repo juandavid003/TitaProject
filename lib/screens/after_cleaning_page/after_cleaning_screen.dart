@@ -4,12 +4,19 @@ import 'package:odontobb/widgets/base_scaffold.dart';
 
 
 class AfterCleaningScreen extends StatelessWidget {
-    static const routeName = "/afterCleaning_page";
-  const AfterCleaningScreen({super.key});
+  static const routeName = "/afterCleaning_page";
+
+  final bool cameFromBrushing;
+
+  const AfterCleaningScreen({
+    super.key,
+    this.cameFromBrushing = false,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return BaseScaffold(body: AfterCleaningBody());
+    return BaseScaffold(
+      body: AfterCleaningBody(cameFromBrushing: cameFromBrushing),
+    );
   }
 }
-

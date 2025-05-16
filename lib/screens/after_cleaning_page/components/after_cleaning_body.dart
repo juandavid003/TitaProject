@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:odontobb/models/person_model.dart';
+import 'package:odontobb/services/children_service.dart';
+import 'package:odontobb/util.dart';
 import 'package:odontobb/widgets/tita_prediction_assistant.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AfterCleaningBody extends StatefulWidget {
-  const AfterCleaningBody({super.key});
+  final bool cameFromBrushing;
+  const AfterCleaningBody({super.key, this.cameFromBrushing = false});
 
   @override
   _AfterCleaningBodyState createState() => _AfterCleaningBodyState();
@@ -20,35 +24,44 @@ class _AfterCleaningBodyState extends State<AfterCleaningBody> {
     _loadImageUntilAvailable();
   }
 
-  Future<void> _loadImageUntilAvailable() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
+Future<void> _loadImageUntilAvailable() async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
 
-    while (isLoading) {
-      String? savedImageUrl = prefs.getString('imageUrl');
-      String? savedAssistantResponse = prefs.getString('assistantResponse');
+  while (isLoading) {
+    String? savedImageUrl = prefs.getString('imageUrl');
+    String? savedAssistantResponse = prefs.getString('assistantResponse');
 
-      if (savedImageUrl != null && savedImageUrl != "No disponible") {
-        setState(() {
-          imageUrl = savedImageUrl;
-          assistantResponse = savedAssistantResponse ?? "";
-          isLoading = false;
-        });
-        await prefs.setString('isLoading', "false");
-        break;
-      } else {
-        await Future.delayed(Duration(seconds: 1));
-      }
+    if (savedImageUrl != null && savedImageUrl != "No disponible") {
+      setState(() {
+        imageUrl = savedImageUrl;
+        assistantResponse = savedAssistantResponse ?? "";
+        isLoading = false;
+      });
 
-      if (savedImageUrl == "No disponible") {
-        setState(() {
-          isLoading = false;
-          imageUrl = null;
-          assistantResponse = "No disponible";
-          prefs.setString('isLoading', "false");
+      await prefs.setString('isLoading', "false");
+
+      // Espera 5 segundos y luego ejecuta la acción si vino del cepillado
+      if (widget.cameFromBrushing) {
+        Future.delayed(Duration(seconds: 7), () {
+          _finishBrush(context);
         });
       }
+
+      break;
+    } else {
+      await Future.delayed(Duration(seconds: 1));
+    }
+
+    if (savedImageUrl == "No disponible") {
+      setState(() {
+        isLoading = false;
+        imageUrl = null;
+        assistantResponse = "No disponible";
+        prefs.setString('isLoading', "false");
+      });
     }
   }
+}
 
   @override
 Widget build(BuildContext context) {
@@ -121,4 +134,33 @@ Widget build(BuildContext context) {
     ),
   );
 }
+
+final ChildrenService childrenService = ChildrenService();
+List<PersonModel> _childrensSelected = []; // Asume que tienes la lista cargada
+
+void _finishBrush(BuildContext context) async {
+  await childrenService.addBrushing(_childrensSelected);
+
+  List<PersonModel> childrensSelectedAvailableCount =
+      await childrenService.childrenBrushingAvailable(_childrensSelected);
+
+  if (childrensSelectedAvailableCount.isNotEmpty) {
+    await childrenService.addBBbCashBulk(childrensSelectedAvailableCount, "tita_brush");
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(Utils.translate('add_bbcash'))),
+    );
+  } else {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(Utils.translate('limited_bbcash_day'))),
+    );
+  }
+
+  _childrensSelected = [];
+
+  Navigator.pushNamed(context, '/stats_page').then((value) {
+    Navigator.pop(context);
+  });
+}
+
 }

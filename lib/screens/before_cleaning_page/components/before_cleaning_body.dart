@@ -23,10 +23,19 @@ import 'package:image/image.dart'
     as img; // Asegúrate de tener esta librería importada
 
 class BeforeCleaningBody extends StatefulWidget {
-  const BeforeCleaningBody({super.key});
+  final bool cameFromBrushing;
+  final PersonModel? selectedChild;
+
+  const BeforeCleaningBody({
+    super.key,
+    this.cameFromBrushing = false,
+    this.selectedChild,
+  });
+
   @override
   _BeforeCleaningBodyState createState() => _BeforeCleaningBodyState();
 }
+
 
 class HolePainter extends CustomPainter {
   final Offset position; // Permite mover el rectángulo
@@ -65,18 +74,30 @@ class _BeforeCleaningBodyState extends State<BeforeCleaningBody> {
   ChildrenService childrenService = ChildrenService();
   final CountDownController _controllerCount = CountDownController();
 
-  @override
-  void initState() {
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-  final selectedPerson = await showChildrenSelectionDialog();
-              if (selectedPerson != null) {
-                setState(() {
-                  _childrensSelected = [selectedPerson];
-                });
-              }     });
-    super.initState();
-    _initializeCamera();
-  }
+@override
+void initState() {
+  super.initState();
+
+  WidgetsBinding.instance.addPostFrameCallback((_) async {
+    if (widget.selectedChild != null) {
+      // Ya viene seleccionado desde el flujo de cepillado
+      setState(() {
+        _childrensSelected = [widget.selectedChild!];
+      });
+    } else {
+      // Mostrar el diálogo para seleccionar el niño
+      final selectedPerson = await showChildrenSelectionDialog();
+      if (selectedPerson != null) {
+        setState(() {
+          _childrensSelected = [selectedPerson];
+        });
+      }
+    }
+  });
+
+  _initializeCamera();
+}
+
 
   @override
   void dispose() {
@@ -261,29 +282,36 @@ onTap: () async {
               ),
             ),
 
-          Positioned(
-            bottom: 50,
-            left: 0,
-            right: 0,
-            child: Center(
-                child: FloatingActionButton(
+           Positioned(
+          bottom: 50,
+          left: 0,
+          right: 0,
+          child: Center(
+            child: FloatingActionButton(
               onPressed: _childrensSelected.isEmpty
                   ? null
                   : () async {
                       if (_imageFile != null && _childrensSelected.isNotEmpty) {
                         File imageFile = File(_imageFile!.path);
-                        SharedPreferences prefs =
-                            await SharedPreferences.getInstance();
+                        SharedPreferences prefs = await SharedPreferences.getInstance();
                         await prefs.remove('imageUrl');
                         await prefs.remove('assistantResponse');
                         FileService.uploadImage(
-                            imageFile, _childrensSelected[0].id!);
+                          imageFile,
+                          _childrensSelected[0].id!,
+                        );
                         disposeCameraAfterDelay();
+
+                        // Aquí pasas el parámetro
                         await Navigator.push(
                           context,
                           MaterialPageRoute(
-                              builder: (context) => AfterCleaningScreen()),
+                            builder: (context) => AfterCleaningScreen(
+                              cameFromBrushing: widget.cameFromBrushing, // Uso de nombre de argumento
+                            ),
+                          ),
                         );
+
                         Navigator.pop(context);
                       } else {
                         _takePicture();
@@ -295,12 +323,13 @@ onTap: () async {
               child: Icon(
                 _imageFile == null ? Icons.camera : Icons.check,
               ),
-            )),
+            ),
           ),
-        ],
-      ),
-    );
-  }
+        ),
+      ],
+    ),
+  );
+}
 
 Future<PersonModel?> showChildrenSelectionDialog() async {
   List<PersonModel> children = await childrenService.get();

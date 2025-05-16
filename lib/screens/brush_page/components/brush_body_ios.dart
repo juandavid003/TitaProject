@@ -1,5 +1,3 @@
-// ignore_for_file: use_build_context_synchronously, library_private_types_in_public_api, unused_import
-
 import 'dart:async';
 import 'package:odontobb/screens/home_page/home_screen.dart';
 import 'package:odontobb/screens/pay_page/pay_screen.dart';
@@ -51,6 +49,11 @@ class _ArBrushPageIosState extends State<ArBrushPageIos> {
   late final CountDownController _controllerCount = CountDownController();
   int _durationCountDownTimer = 3;
   bool _hasConfirmedSelection = false;
+  
+  // Animation state tracking
+  String _currentAnimation = "idle"; // idle, greeting, brushing, new
+  bool _firstAnimationCompleted = false;
+  Timer? _animationTimer;
 
   @override
   void initState() {
@@ -68,6 +71,7 @@ class _ArBrushPageIosState extends State<ArBrushPageIos> {
     }
     player.dispose();
     _timer.cancel();
+    _animationTimer?.cancel();
     super.dispose();
   }
 
@@ -156,6 +160,7 @@ class _ArBrushPageIosState extends State<ArBrushPageIos> {
     aRKitAnchor = anchor;
     anchorId = anchor.identifier;
     if (node.url.isEmpty) {
+      _currentAnimation = "greeting";
       node = ARKitReferenceNode(
         name: 'tita',
         url: 'models.scnassets/Tita_Anim_Saludo.dae',
@@ -168,9 +173,11 @@ class _ArBrushPageIosState extends State<ArBrushPageIos> {
         await player.setAsset('assets/audio/greeting.mp3');
         player.play();
 
+        // Wait for greeting animation to finish
         await Future.delayed(const Duration(seconds: 7));
 
         if (!play) {
+          _currentAnimation = "idle";
           node = ARKitReferenceNode(
               name: 'tita-idle',
               url: 'models.scnassets/Tita_Anim_Idle.dae',
@@ -179,6 +186,55 @@ class _ArBrushPageIosState extends State<ArBrushPageIos> {
 
           arkitController.add(node, parentNodeName: anchor.nodeName);
           arkitController.remove('tita');
+        }
+      });
+    }
+  }
+
+  // Function to change to the next animation after brushing
+  void _playNextAnimation() async {
+    if (_currentAnimation == "brushing" && !_firstAnimationCompleted) {
+      _firstAnimationCompleted = true;
+      
+      // The duration should match your brushing animation length
+      // Adjust this value according to your animation duration
+      const int brushingAnimationDuration = 60; // seconds
+      
+      _animationTimer?.cancel();
+      _animationTimer = Timer(Duration(seconds: brushingAnimationDuration), () {
+        if (play) {
+          // Change to the next animation
+          _changeToNewAnimation();
+        }
+      });
+    }
+  }
+
+  // Function to switch to the new animation
+  void _changeToNewAnimation() async {
+    if (aRKitAnchor != null) {
+      _currentAnimation = "new";
+      
+      arkitController.remove('tita');
+      
+      node = ARKitReferenceNode(
+          name: 'tita-new',
+          url: 'models.scnassets/new.dae', // Change this to your new animation file
+          position: vector.Vector3(0, 0, 0),
+          scale: vector.Vector3(0.01, 0.01, 0.01));
+
+      arkitController.add(node, parentNodeName: aRKitAnchor!.nodeName);
+      
+      await player.setAsset('assets/audio/complete.mp3'); // Change to appropriate audio
+      player.play();
+      
+    
+      const int newAnimationDuration = 10; // seconds
+      
+      _animationTimer?.cancel();
+      _animationTimer = Timer(Duration(seconds: newAnimationDuration), () {
+        if (play) {
+          _finishBrush(context);
         }
       });
     }
@@ -268,9 +324,6 @@ class _ArBrushPageIosState extends State<ArBrushPageIos> {
   }
 
    void _brushingBtn(BuildContext context) async {
-  //   bool isClient = await _isClient();
-
-  //   if (isClient) {
       if (_allChildrens.isEmpty) {
         Navigator.pushNamed(context, '/children_form')
             .then((value) => {getInfo()});
@@ -291,6 +344,9 @@ class _ArBrushPageIosState extends State<ArBrushPageIos> {
               if (value && aRKitAnchor != null) {
                 await player.setAsset('assets/audio/brushing.mp3');
 
+                _currentAnimation = "brushing";
+                _firstAnimationCompleted = false;
+
                 node = ARKitReferenceNode(
                     name: 'tita',
                     url: 'models.scnassets/Tita_Anim_Cepillado.dae',
@@ -302,16 +358,19 @@ class _ArBrushPageIosState extends State<ArBrushPageIos> {
 
                 player.play();
                 arkitController.remove('tita-idle');
+                
+                // Start the sequence of animations
+                _playNextAnimation();
               }
             });
           }
         } else {
           _timer.cancel();
+          _animationTimer?.cancel();
           player.pause();
         }
       }
     }
-// }
 
   Future<bool> _isClient() async {
     bool client = await authenticationService.isClient();
@@ -338,131 +397,128 @@ class _ArBrushPageIosState extends State<ArBrushPageIos> {
         });
   }
 
-void showChildrenSelectionDialog() async {
-  List<PersonModel> children = await childrenService.get();
-  if (children.isEmpty) return;
+  void showChildrenSelectionDialog() async {
+    List<PersonModel> children = await childrenService.get();
+    if (children.isEmpty) return;
 
-  showDialog(
-    context: context,
-    barrierDismissible: false,
-    builder: (BuildContext context) {
-      List<PersonModel> selectedChildren = List.from(_childrensSelected);
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        List<PersonModel> selectedChildren = List.from(_childrensSelected);
 
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return WillPopScope(
+              onWillPop: () async {
+                Navigator.of(context).popUntil((route) => route.isFirst);
+                return false;
+              },
+              child: AlertDialog(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                title: Text(
+                  "Selecciona un usuario",
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+                  textAlign: TextAlign.center,
+                ),
+                content: Container(
+                  width: double.maxFinite,
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      maxHeight: MediaQuery.of(context).size.height * 0.5,
+                    ),
+                    child: ListView.builder(
+                      shrinkWrap: true,
+                      itemCount: children.length,
+                      itemBuilder: (context, index) {
+                        final child = children[index];
+                        bool isSelected = selectedChildren.contains(child);
 
-
-
-       return StatefulBuilder(
-        builder: (context, setState) {
-          return WillPopScope(
-            onWillPop: () async {
-              Navigator.of(context).popUntil((route) => route.isFirst);
-              return false;
-            },
-            child: AlertDialog(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              title: Text(
-                "Selecciona un usuario",
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
-                textAlign: TextAlign.center,
-              ),
-              content: Container(
-                width: double.maxFinite,
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(
-                    maxHeight: MediaQuery.of(context).size.height * 0.5,
-                  ),
-                  child: ListView.builder(
-                    shrinkWrap: true,
-                    itemCount: children.length,
-                    itemBuilder: (context, index) {
-                      final child = children[index];
-                      bool isSelected = selectedChildren.contains(child);
-
-                      return Card(
-                        elevation: 4,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: ListTile(
-                          leading: Icon(Icons.face, color: Colors.blueAccent),
-                          title: Text(
-                            '${child.name ?? "Sin nombre"} ${child.lastNames ?? ""}',
-                            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w400),
+                        return Card(
+                          elevation: 4,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
                           ),
-                          trailing: isSelected
-                              ? Icon(Icons.check_circle, color: Colors.green)
-                              : Icon(Icons.check_circle_outline, color: Colors.grey),
-                          onTap: () {
-                              setState(() {
-                                if (isSelected) {
-                                  selectedChildren.remove(child);
-                                } else {
-                                  selectedChildren
-                                    ..clear()
-                                    ..add(child);
-                                }
-                              });
-                            },
-                        ),
-                      );
-                    },
+                          child: ListTile(
+                            leading: Icon(Icons.face, color: Colors.blueAccent),
+                            title: Text(
+                              '${child.name ?? "Sin nombre"} ${child.lastNames ?? ""}',
+                              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w400),
+                            ),
+                            trailing: isSelected
+                                ? Icon(Icons.check_circle, color: Colors.green)
+                                : Icon(Icons.check_circle_outline, color: Colors.grey),
+                            onTap: () {
+                                setState(() {
+                                  if (isSelected) {
+                                    selectedChildren.remove(child);
+                                  } else {
+                                    selectedChildren
+                                      ..clear()
+                                      ..add(child);
+                                  }
+                                });
+                              },
+                          ),
+                        );
+                      },
+                    ),
                   ),
                 ),
-              ),
-              actions: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    ElevatedButton(
-                      onPressed: () {
-                        Navigator.of(context).popUntil((route) => route.isFirst);
-                      },
-                      style: ElevatedButton.styleFrom(
-                        iconColor: Colors.grey,
-                      ),
-                      child: Text(
-                        "Cancelar",
-                        style: TextStyle(
-                          color: Colors.black,
-                          fontWeight: FontWeight.w400,
-                          fontSize: 14,
+                actions: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      ElevatedButton(
+                        onPressed: () {
+                          Navigator.of(context).popUntil((route) => route.isFirst);
+                        },
+                        style: ElevatedButton.styleFrom(
+                          iconColor: Colors.grey,
+                        ),
+                        child: Text(
+                          "Cancelar",
+                          style: TextStyle(
+                            color: Colors.black,
+                            fontWeight: FontWeight.w400,
+                            fontSize: 14,
+                          ),
                         ),
                       ),
-                    ),
-                      SizedBox(
-                        width: MediaQuery.of(context).size.width * 0.1),                
-                      ElevatedButton(
-                      onPressed: selectedChildren.isNotEmpty
-                          ? () {
-                              setState(() {
-                                _childrensSelected = selectedChildren.map((child) {
-                                  child.check = true;
-                                  return child;
-                                }).toList();
-                                _hasConfirmedSelection = true;
-                              });
-                              WidgetsBinding.instance.addPostFrameCallback((_) {
-                                if (_hasConfirmedSelection && !_controllerCount.isStarted.value) {
-                                  _controllerCount.start();
-                                }
-                              });
-                              Navigator.pop(context, selectedChildren);
-                            }
-                          : null,
-                      child: Text("Continuar"),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          );
-        },
-      );
+                        SizedBox(
+                          width: MediaQuery.of(context).size.width * 0.1),                
+                        ElevatedButton(
+                        onPressed: selectedChildren.isNotEmpty
+                            ? () {
+                                setState(() {
+                                  _childrensSelected = selectedChildren.map((child) {
+                                    child.check = true;
+                                    return child;
+                                  }).toList();
+                                  _hasConfirmedSelection = true;
+                                });
+                                WidgetsBinding.instance.addPostFrameCallback((_) {
+                                  if (_hasConfirmedSelection && !_controllerCount.isStarted.value) {
+                                    _controllerCount.start();
+                                  }
+                                });
+                                Navigator.pop(context, selectedChildren);
+                              }
+                            : null,
+                        child: Text("Continuar"),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            );
+          },
+        );
 
-      
-      // return StatefulBuilder(
+
+              // return StatefulBuilder(
       //   builder: (context, setState) {
       //     return WillPopScope(
       //       onWillPop: () async {
@@ -569,9 +625,11 @@ void showChildrenSelectionDialog() async {
       //     );
       //   },
       // );
-    },
-  );
-}
+
+      
+      },
+    );
+  }
 
   Widget _loadChildens() {
     if (_childrensSelected.isEmpty) {
@@ -601,7 +659,6 @@ void showChildrenSelectionDialog() async {
     }
   }
 
-
   void startTimer(BuildContext context) {
     if (_timer.isActive) {
       _timer.cancel();
@@ -612,7 +669,12 @@ void showChildrenSelectionDialog() async {
           () {
             if (_start < 1) {
               timer.cancel();
-              _finishBrush(context);
+              
+              // Only go to finish brush if we're not in the middle of sequential animations
+              if (_currentAnimation != "new") {
+                _finishBrush(context);
+              }
+              
               _start = _totalTime;
             } else {
               _start = _start - 1;
@@ -623,23 +685,23 @@ void showChildrenSelectionDialog() async {
     }
   }
 
-
   void _finishBrush(BuildContext context) async {
-  final selectedChild = _childrensSelected.first;
+    // Cancel any pending animation timers
+    _animationTimer?.cancel();
+    
+    final selectedChild = _childrensSelected.first;
 
-  await childrenService.addBrushing([selectedChild]);
+    await childrenService.addBrushing([selectedChild]);
 
-  Navigator.pushNamed(
-    context,
-    '/beforeCleaning_page',
-    arguments: {
-      'fromBrushing': true,
-      'child': selectedChild,
-    },
-  );
-}
-
-
+    Navigator.pushNamed(
+      context,
+      '/beforeCleaning_page',
+      arguments: {
+        'fromBrushing': true,
+        'child': selectedChild,
+      },
+    );
+  }
 
   // void _finishBrush(BuildContext context) async {
   //   await childrenService.addBrushing(_childrensSelected);
