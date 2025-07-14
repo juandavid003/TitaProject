@@ -1,0 +1,38 @@
+{
+  "project_info": {
+    "project_number": "626711514947",
+    "firebase_url": "https://odontobbapp-default-rtdb.firebaseio.com",
+    "project_id": "odontobbapp",
+    "storage_bucket": "odontobbapp.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:626711514947:android:cdfe39878b1949af2fe9f6",
+        "android_client_info": {
+          "package_name": "com.odontobb.athome"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDX3ZajyJ1_vVEC7i-nY38X4y-FubNKst8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "626711514947-4ihiedfq884gt0ohe22fli5vj3fqn19o.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.odontobb.brushing"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
